@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - integration/render-to-apk-atlas-assistant-001
+      - integration/assistant-light-command-to-proof-apk-001
     paths:
       - 'android/atlas-assistant/**'
       - '.github/workflows/atlas-android-apk.yml'
@@ -47,9 +48,53 @@ jobs:
       - name: Verify APK exists
         run: test -f app/build/outputs/apk/debug/app-debug.apk
 
-      - name: Upload APK
+      - name: Prove public Render command-to-proof loop
+        run: |
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import urllib.request
+          import uuid
+
+          correlation_id = str(uuid.uuid4())
+          body = {
+              "intent": "Assistant Light APK production command-to-proof canary",
+              "correlation_id": correlation_id,
+              "requested_by": "ark-os-apk-ci",
+              "source_system": "ARK-OS/Atlas-Android-CI",
+              "proof_required": True,
+              "memory_return_required": False,
+          }
+          request = urllib.request.Request(
+              "https://ghost-atlas-runtime-gateway.onrender.com/v1/assistant/command-to-proof",
+              data=json.dumps(body).encode("utf-8"),
+              headers={"Content-Type": "application/json", "Accept": "application/json"},
+              method="POST",
+          )
+          with urllib.request.urlopen(request, timeout=100) as response:
+              assert response.status == 200, response.status
+              result = json.loads(response.read().decode("utf-8"))
+
+          assert result.get("accepted") is True, result
+          assert result.get("complete") is True, result
+          assert result.get("correlation_id") == correlation_id, result
+          assert result.get("proof_count", 0) >= 1, result
+          assert result.get("run", {}).get("phase") == "COMPLETE", result
+          assert result.get("completion_claim") == "COMPLETE_WITH_PROOF_OBSERVED", result
+
+          proof_path = pathlib.Path("app/build/outputs/apk/debug/command-to-proof-proof.json")
+          proof_path.write_text(json.dumps(result, indent=2, sort_keys=True), encoding="utf-8")
+          print("ASSISTANT_LIGHT_PUBLIC_COMMAND_TO_PROOF=PASS")
+          print("RUN_ID=" + str(result.get("run_id")))
+          print("CORRELATION_ID=" + correlation_id)
+          print("PROOF_COUNT=" + str(result.get("proof_count")))
+          PY
+
+      - name: Upload APK and proof
         uses: actions/upload-artifact@v4
         with:
-          name: ghost-atlas-assistant-debug-apk
-          path: android/atlas-assistant/app/build/outputs/apk/debug/app-debug.apk
+          name: ghost-atlas-assistant-v0.2.0-command-to-proof
+          path: |
+            android/atlas-assistant/app/build/outputs/apk/debug/app-debug.apk
+            android/atlas-assistant/app/build/outputs/apk/debug/command-to-proof-proof.json
           if-no-files-found: error
