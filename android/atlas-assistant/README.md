@@ -56,6 +56,8 @@ Expected artifact:
 
 The GitHub workflow `.github/workflows/atlas-android-apk.yml` performs the same build and uploads the debug APK when a runner is available.
 
+Ark's Medusa gate also treats credential-related filenames as security-sensitive. Build Truth and documentation use policy-oriented filenames rather than credential-material names; the scanner itself remains strict.
+
 ## Truth boundary
 
 Repository scaffold != APK proof. Promotion requires:
