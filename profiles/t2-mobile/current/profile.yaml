@@ -1,0 +1,11 @@
+schema: ga-ark-profile/v1
+profile:
+  id: ga-ark.t2-mobile.current
+  class: baseline
+  state: active-reported
+  runtime: atlas-mind-runtime
+  install_root: "~/.ghost-atlas"
+  identities:
+    JANUS: command
+    ODIN: observe
+  mutation_policy: preserve
