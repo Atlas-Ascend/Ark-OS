@@ -1,0 +1,24 @@
+schema: ghost-atlas.hypernet.node/v1
+node_id: ark-os
+repository: Atlas-Ascend/Ark-OS
+organism_root: Atlas-Ascend/VISHVARUPA-Software-Hardware-Organism
+version: 0.1.0
+lifecycle: active-candidate
+plane: runtime-hardware-infra
+canonical_role: field-hardware-operating-system
+authority:
+  owns: [field-node-contract, device-capability-declaration, mobile-runtime-interface]
+  does_not_own: [executive-authorization, unbounded-shell-execution, physical-capability-proof]
+upstream: [Atlas-Ascend/Janus-Prime, Atlas-Ascend/Atlas-Mind-LLM, Atlas-Ascend/Cali-CRF]
+downstream: [Atlas-Ascend/Estate-Service-Catalog-Capability-Registry, Atlas-Ascend/Crowngrid, Atlas-Ascend/Ghost-Atlas-Estate-Event-Gateway]
+integration:
+  work_substrate: Atlas-Ascend/Packet-OS
+  orchestration: Atlas-Ascend/workforce-spine
+  quality: Atlas-Ascend/SECA
+  security: Atlas-Ascend/Medusa-Sovereign-Security
+  memory: Atlas-Ascend/thoth-archive-engine
+  failure: Atlas-Ascend/PROMETHEUS-V-1.1.1
+proof:
+  runtime_state: unverified
+  physical_claims_require_live_receipts: true
+  repository_presence_is_not_runtime_proof: true
