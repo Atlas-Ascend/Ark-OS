@@ -18,7 +18,7 @@ public final class AtlasRuntimeClient {
     private AtlasRuntimeClient() {}
 
     public static JSONObject getResidentBrief() throws Exception {
-        return request("GET", "/v1/sami/brief", null);
+        return request("GET", "/v1/sami/brief", null, 20_000);
     }
 
     public static JSONObject submitCommand(String intent) throws Exception {
@@ -29,17 +29,17 @@ public final class AtlasRuntimeClient {
         body.put("source_system", "ARK-OS/Atlas-Android");
         body.put("proof_required", true);
         body.put("memory_return_required", true);
-        return request("POST", "/v1/commands", body);
+        return request("POST", "/v1/assistant/command-to-proof", body, 90_000);
     }
 
-    private static JSONObject request(String method, String path, JSONObject body) throws Exception {
+    private static JSONObject request(String method, String path, JSONObject body, int readTimeoutMs) throws Exception {
         URL url = new URL(BuildConfig.RUNTIME_BASE_URL + path);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod(method);
         connection.setConnectTimeout(8_000);
-        connection.setReadTimeout(20_000);
+        connection.setReadTimeout(readTimeoutMs);
         connection.setRequestProperty("Accept", "application/json");
-        connection.setRequestProperty("User-Agent", "ghost-atlas-ark-android/0.1");
+        connection.setRequestProperty("User-Agent", "ghost-atlas-ark-android/0.2");
 
         if (body != null) {
             connection.setDoOutput(true);
