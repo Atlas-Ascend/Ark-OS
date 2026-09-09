@@ -52,14 +52,19 @@ public final class AtlasVoiceInteractionSession extends VoiceInteractionSession 
     @Override
     public void onHandleAssist(AssistState state) {
         super.onHandleAssist(state);
-        if (state.getActivityId() != null) {
-            foregroundPackage = state.getActivityId().getComponentName().getPackageName();
-        }
+        captureForegroundPackage(state.getAssistStructure());
     }
 
     @Override
     public void onHandleAssist(Bundle data, AssistStructure structure, AssistContent content) {
         super.onHandleAssist(data, structure, content);
+        captureForegroundPackage(structure);
+    }
+
+    private void captureForegroundPackage(AssistStructure structure) {
+        if (structure != null && structure.getActivityComponent() != null) {
+            foregroundPackage = structure.getActivityComponent().getPackageName();
+        }
     }
 
     @Override
