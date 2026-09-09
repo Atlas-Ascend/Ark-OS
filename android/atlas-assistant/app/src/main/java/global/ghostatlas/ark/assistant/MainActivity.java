@@ -25,9 +25,13 @@ import global.ghostatlas.ark.assistant.net.AtlasRuntimeClient;
 
 public final class MainActivity extends Activity implements TextToSpeech.OnInitListener {
     private static final int AUDIO_PERMISSION = 1001;
+
+    private enum SpeechLane { TALK, ACT }
+
     private TextView transcript;
     private TextToSpeech tts;
     private SpeechRecognizer recognizer;
+    private SpeechLane pendingLane = SpeechLane.TALK;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +49,9 @@ public final class MainActivity extends Activity implements TextToSpeech.OnInitL
         root.addView(title);
 
         transcript = new TextView(this);
-        transcript.setText("Render-connected Android body\nSAMI context • JANUS command boundary • Thoth memory");
+        transcript.setText(
+                "Render-connected Android body\n" +
+                "TALK = cognition only • ACT = JANUS-governed execution • STATUS = SAMI");
         transcript.setPadding(0, 24, 0, 24);
         root.addView(transcript);
 
@@ -54,10 +60,15 @@ public final class MainActivity extends Activity implements TextToSpeech.OnInitL
         assistant.setOnClickListener(v -> requestAssistantRole());
         root.addView(assistant);
 
-        Button speak = new Button(this);
-        speak.setText("Talk to Atlas");
-        speak.setOnClickListener(v -> startListening());
-        root.addView(speak);
+        Button talk = new Button(this);
+        talk.setText("Talk to Atlas");
+        talk.setOnClickListener(v -> startListening(SpeechLane.TALK));
+        root.addView(talk);
+
+        Button act = new Button(this);
+        act.setText("Act through JANUS");
+        act.setOnClickListener(v -> startListening(SpeechLane.ACT));
+        root.addView(act);
 
         Button status = new Button(this);
         status.setText("Estate status");
@@ -76,7 +87,8 @@ public final class MainActivity extends Activity implements TextToSpeech.OnInitL
         }
     }
 
-    private void startListening() {
+    private void startListening(SpeechLane lane) {
+        pendingLane = lane;
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, AUDIO_PERMISSION);
             return;
@@ -88,7 +100,9 @@ public final class MainActivity extends Activity implements TextToSpeech.OnInitL
         if (recognizer != null) recognizer.destroy();
         recognizer = SpeechRecognizer.createSpeechRecognizer(this);
         recognizer.setRecognitionListener(new RecognitionListener() {
-            @Override public void onReadyForSpeech(Bundle params) { transcript.setText("Listening…"); }
+            @Override public void onReadyForSpeech(Bundle params) {
+                transcript.setText(pendingLane == SpeechLane.ACT ? "Listening for JANUS action…" : "Listening to Atlas conversation…");
+            }
             @Override public void onBeginningOfSpeech() {}
             @Override public void onRmsChanged(float rmsdB) {}
             @Override public void onBufferReceived(byte[] buffer) {}
@@ -98,7 +112,10 @@ public final class MainActivity extends Activity implements TextToSpeech.OnInitL
             @Override public void onEvent(int eventType, Bundle params) {}
             @Override public void onResults(Bundle results) {
                 ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                if (matches != null && !matches.isEmpty()) submit(matches.get(0));
+                if (matches == null || matches.isEmpty()) return;
+                String speech = matches.get(0);
+                if (pendingLane == SpeechLane.ACT) submitAction(speech);
+                else submitConversation(speech);
             }
         });
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -118,20 +135,41 @@ public final class MainActivity extends Activity implements TextToSpeech.OnInitL
         }, "atlas-status").start();
     }
 
-    private void submit(String speech) {
-        transcript.setText("You: " + speech + "\nRouting through JANUS…");
+    private void submitConversation(String speech) {
+        transcript.setText("You: " + speech + "\nAtlas: conversation bridge awaiting Render-side binding. No action was dispatched.");
+        new Thread(() -> {
+            try {
+                JSONObject brief = AtlasRuntimeClient.getResidentBrief();
+                String context = brief.optJSONObject("counts") != null
+                        ? brief.optJSONObject("counts").toString()
+                        : "resident state online";
+                String message = "Atlas heard you. Conversational inference is not yet bound to the APK. " +
+                        "No command was executed. Current resident context: " + context;
+                runOnUiThread(() -> {
+                    transcript.setText("You: " + speech + "\nAtlas: " + message);
+                    speak(message);
+                });
+            } catch (Exception error) {
+                runOnUiThread(() -> transcript.setText(
+                        "You: " + speech + "\nAtlas conversation unavailable; no command was executed. " + error.getMessage()));
+            }
+        }, "atlas-talk-read-only").start();
+    }
+
+    private void submitAction(String speech) {
+        transcript.setText("Action request: " + speech + "\nRouting through JANUS…");
         new Thread(() -> {
             try {
                 JSONObject response = AtlasRuntimeClient.submitCommand(speech);
-                String spoken = response.optString("message", response.optString("status", "Command accepted."));
+                String spoken = response.optString("message", response.optString("status", "Action accepted for governed execution."));
                 runOnUiThread(() -> {
-                    transcript.setText("You: " + speech + "\nAtlas: " + response.toString());
+                    transcript.setText("Action request: " + speech + "\nJANUS: " + response.toString());
                     speak(spoken);
                 });
             } catch (Exception error) {
-                runOnUiThread(() -> transcript.setText("Atlas command degraded: " + error.getMessage()));
+                runOnUiThread(() -> transcript.setText("JANUS action degraded: " + error.getMessage()));
             }
-        }, "atlas-command").start();
+        }, "atlas-janus-action").start();
     }
 
     private void speak(String text) {
