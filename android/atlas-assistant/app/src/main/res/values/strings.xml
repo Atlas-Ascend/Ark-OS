@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Atlas</string>
+    <string name="atlas_ready">ATLAS / Resident GARI</string>
+    <string name="tap_to_speak">Tap to speak</string>
+</resources>
