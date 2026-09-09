@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import global.ghostatlas.ark.assistant.BuildConfig;
@@ -20,10 +21,14 @@ public final class AtlasRuntimeClient {
         return request("GET", "/v1/sami/brief", null);
     }
 
-    public static JSONObject submitCommand(String command) throws Exception {
+    public static JSONObject submitCommand(String intent) throws Exception {
         JSONObject body = new JSONObject();
-        body.put("command", command);
+        body.put("intent", intent);
+        body.put("correlation_id", UUID.randomUUID().toString());
         body.put("requested_by", "atlas-android-assistant");
+        body.put("source_system", "ARK-OS/Atlas-Android");
+        body.put("proof_required", true);
+        body.put("memory_return_required", true);
         return request("POST", "/v1/commands", body);
     }
 
