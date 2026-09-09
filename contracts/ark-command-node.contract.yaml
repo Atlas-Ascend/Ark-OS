@@ -1,0 +1,29 @@
+schema: ga-ark-command/v1
+command:
+  required:
+    - command_id
+    - issued_at
+    - issuer
+    - target
+    - intent
+    - permissions
+    - proof_required
+  fields:
+    command_id: string
+    issued_at: rfc3339
+    issuer: string
+    target: string
+    intent: string
+    permissions: array
+    timeout_seconds: integer
+    rollback: object
+    proof_required: boolean
+result:
+  required:
+    - command_id
+    - status
+    - evidence
+  status:
+    enum: [accepted, running, passed, failed, denied, rolled_back]
+  evidence:
+    class: ProofGridReceipt

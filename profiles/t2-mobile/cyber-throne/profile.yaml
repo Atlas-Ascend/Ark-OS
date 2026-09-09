@@ -1,0 +1,28 @@
+schema: ga-ark-profile/v1
+profile:
+  id: ga-ark.t2-mobile.cyber-throne.v1
+  class: overlay
+  baseline: ga-ark.t2-mobile.current
+  activation: explicit
+  paid_dependencies_required: false
+  capabilities:
+    - operator-control
+    - android-body
+    - voice-command
+    - hypernet-control
+  interfaces:
+    - janus-vibe-mobile
+    - odin-mobile
+  routing:
+    ingress: [voice, touch, launcher-shortcut, local-api]
+    executive: JANUS
+    task_substrate: PacketOS
+    bloodstream: WorkforceSpine
+    verification: [SECA, DevOS]
+    evidence: ProofGrid
+  invariants:
+    - baseline_immutable
+    - rollback_required
+    - offline_command_path_preserved
+    - remote_compute_optional
+    - proof_receipt_required_for_promotion

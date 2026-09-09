@@ -1,0 +1,13 @@
+name: verify-ga-ark
+on:
+  push:
+  pull_request:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Structure tests
+        run: bash tests/test_structure.sh
+      - name: Repository verification
+        run: bash scripts/verification/verify-repo.sh

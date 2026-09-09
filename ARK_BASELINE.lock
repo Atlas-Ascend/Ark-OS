@@ -1,0 +1,20 @@
+schema: ga-ark-baseline-lock/v1
+baseline:
+  id: current-phone-ark
+  status: declared-awaiting-device-capture
+  reported_runtime:
+    name: atlas-mind-runtime
+    version: "0.2.0"
+  reported_install_root: "~/.ghost-atlas"
+  identities:
+    - JANUS
+    - ODIN
+  preservation: immutable-after-promotion
+  provenance:
+    estate_lineage: Atlas-Ascend/Eden-2.0
+    exact_source_ref: UNVERIFIED_UNTIL_CAPTURE
+  promotion_requirements:
+    - capture_checksum_pass
+    - medusa_secret_gate_pass
+    - device_identity_manifest_present
+    - rollback_path_present

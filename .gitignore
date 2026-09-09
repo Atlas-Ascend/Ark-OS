@@ -1,0 +1,42 @@
+# Secrets / credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+**/.ssh/
+**/credentials*
+**/token*
+**/secret*
+
+# Runtime/private state
+**/logs/
+**/log/
+**/cache/
+**/.cache/
+**/models/
+*.gguf
+*.bin
+*.db
+*.sqlite
+*.sqlite3
+proof/private/
+baseline/**/private/
+
+# Archives / temp
+*.tar
+*.tar.gz
+*.zip
+*.tmp
+*.swp
+.DS_Store
+
+# Build outputs
+node_modules/
+dist/
+build/
+.venv/
+__pycache__/
