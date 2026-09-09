@@ -51,7 +51,7 @@ public final class MainActivity extends Activity implements TextToSpeech.OnInitL
         transcript = new TextView(this);
         transcript.setText(
                 "Render-connected Android body\n" +
-                "TALK = cognition only • ACT = JANUS-governed execution • STATUS = SAMI");
+                "TALK = cognition only • ACT = JANUS command-to-proof • STATUS = SAMI");
         transcript.setPadding(0, 24, 0, 24);
         root.addView(transcript);
 
@@ -66,7 +66,7 @@ public final class MainActivity extends Activity implements TextToSpeech.OnInitL
         root.addView(talk);
 
         Button act = new Button(this);
-        act.setText("Act through JANUS");
+        act.setText("Act through JANUS → Proof");
         act.setOnClickListener(v -> startListening(SpeechLane.ACT));
         root.addView(act);
 
@@ -157,19 +157,30 @@ public final class MainActivity extends Activity implements TextToSpeech.OnInitL
     }
 
     private void submitAction(String speech) {
-        transcript.setText("Action request: " + speech + "\nRouting through JANUS…");
+        transcript.setText("Action request: " + speech + "\nJANUS → runtime → proof…");
         new Thread(() -> {
             try {
                 JSONObject response = AtlasRuntimeClient.submitCommand(speech);
-                String spoken = response.optString("message", response.optString("status", "Action accepted for governed execution."));
+                boolean complete = response.optBoolean("complete", false);
+                int proofCount = response.optInt("proof_count", 0);
+                String runId = response.optString("run_id", "unknown");
+                if (!complete || proofCount < 1) {
+                    throw new IllegalStateException("Runtime returned without proof-complete state");
+                }
+                String spoken = "Complete. Proof received.";
+                String rendered = "Action request: " + speech +
+                        "\nSTATE: COMPLETE" +
+                        "\nRUN: " + runId +
+                        "\nPROOFS: " + proofCount +
+                        "\n\n" + response.toString();
                 runOnUiThread(() -> {
-                    transcript.setText("Action request: " + speech + "\nJANUS: " + response.toString());
+                    transcript.setText(rendered);
                     speak(spoken);
                 });
             } catch (Exception error) {
-                runOnUiThread(() -> transcript.setText("JANUS action degraded: " + error.getMessage()));
+                runOnUiThread(() -> transcript.setText("JANUS command-to-proof failed: " + error.getMessage()));
             }
-        }, "atlas-janus-action").start();
+        }, "atlas-janus-command-to-proof").start();
     }
 
     private void speak(String text) {
