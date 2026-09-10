@@ -1,0 +1,35 @@
+schema: ghost-atlas.contract/resident-edge-node/v1
+purpose: Define a bounded always-on ARK node that relays, buffers, observes, and routes without claiming heavy-compute authority.
+required_identity:
+  - node_id
+  - device_identity
+  - role
+required_services:
+  - sshd
+  - tmux
+required_paths:
+  - hypernet/inbox
+  - hypernet/packets/pending
+  - hypernet/packets/claimed
+  - hypernet/packets/running
+  - hypernet/packets/complete
+  - hypernet/packets/failed
+  - hypernet/events
+  - hypernet/receipts
+  - hypernet/logs
+  - hypernet/state
+  - hypernet/spool/outbound
+invariants:
+  - resident node MUST NOT treat repository presence as runtime proof
+  - resident node MUST NOT route work to nodes whose latest health state is OFFLINE
+  - resident node MUST preserve queued work during downstream outage
+  - resident node MUST NOT commit credentials, SSH private keys, tokens, or device-private state
+  - resident node SHOULD remain useful when cloud services are unavailable
+  - remote administration SHOULD use key-based authentication over the private Hypernet
+proof:
+  required:
+    - resident directories exist
+    - sshd process is reachable from authorized peer
+    - tmux resident session exists
+    - health snapshot is emitted
+    - node registry can represent OFFLINE and ONLINE states
