@@ -7,15 +7,16 @@ REPO="$ROOT/Ark-OS"
 BIN="$HOME/.local/bin"
 BOOTDIR="$HOME/.termux/boot"
 STATE="$HOME/.local/state/ghost-atlas"
+RUNTIME="$HOME/.local/share/ark-omega"
+VENV="$RUNTIME/venv"
 MARK_BEGIN="# >>> ARK OMEGA AUTOATTACH >>>"
 MARK_END="# <<< ARK OMEGA AUTOATTACH <<<"
 
 echo "=== GHOST ATLAS // ODIN ARK Ω PERSISTENT INSTALL ==="
 pkg update -y
 pkg install -y git openssh curl jq rsync python tmux
-python -m pip install --upgrade pip
 
-mkdir -p "$ROOT" "$BIN" "$BOOTDIR" "$STATE/logs" "$STATE/receipts" "$STATE/outbox" "$HOME/.config/ghost-atlas"
+mkdir -p "$ROOT" "$BIN" "$BOOTDIR" "$STATE/logs" "$STATE/receipts" "$STATE/outbox" "$HOME/.config/ghost-atlas" "$RUNTIME"
 
 if [ ! -d "$REPO/.git" ]; then
   git clone --branch "$BRANCH" --single-branch https://github.com/Atlas-Ascend/Ark-OS.git "$REPO"
@@ -25,11 +26,16 @@ else
   git -C "$REPO" pull --ff-only origin "$BRANCH"
 fi
 
-python -m pip install -r "$REPO/ARK-OMEGA/termux/requirements.txt"
+# Termux owns its system Python/pip. Never upgrade or replace pip globally.
+if [ ! -x "$VENV/bin/python" ]; then
+  python -m venv "$VENV"
+fi
+"$VENV/bin/python" -m pip install --disable-pip-version-check -r "$REPO/ARK-OMEGA/termux/requirements.txt"
 chmod +x "$REPO/ARK-OMEGA/termux/ark-service.sh"
 
 cat > "$BIN/ark-service" <<EOF
 #!/data/data/com.termux/files/usr/bin/bash
+export ARK_PYTHON="$VENV/bin/python"
 exec "$REPO/ARK-OMEGA/termux/ark-service.sh" "\$@"
 EOF
 cat > "$BIN/ark" <<'EOF'
@@ -83,6 +89,7 @@ ark-service restart
 echo
 ark-service status || true
 echo "PERSISTENT_INSTALL=PASS"
+echo "PYTHON_RUNTIME=$VENV/bin/python"
 echo "BOOT_SCRIPT=$BOOTDIR/10-ark-omega.sh"
 echo "COMMAND=ark"
 echo "OPT_OUT_ONCE=ARK_NO_AUTOATTACH=1 bash"
