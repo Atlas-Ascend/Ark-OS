@@ -6,13 +6,11 @@ import os
 import platform
 import shutil
 import socket
-import subprocess
 from datetime import datetime
 from pathlib import Path
 
-import psutil
 from textual.app import App, ComposeResult
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Horizontal
 from textual.reactive import reactive
 from textual.widgets import Footer, Static
 
@@ -35,18 +33,51 @@ def load_env(path: Path) -> dict[str, str]:
     return out
 
 
+def _read_meminfo() -> tuple[int, int]:
+    vals: dict[str, int] = {}
+    try:
+        for line in Path("/proc/meminfo").read_text(errors="ignore").splitlines():
+            if ":" not in line:
+                continue
+            k, v = line.split(":", 1)
+            parts = v.strip().split()
+            if parts and parts[0].isdigit():
+                vals[k] = int(parts[0]) * 1024
+    except Exception:
+        return 0, 0
+    total = vals.get("MemTotal", 0)
+    avail = vals.get("MemAvailable", vals.get("MemFree", 0))
+    return total, max(0, total - avail)
+
+
+def _read_uptime() -> int:
+    try:
+        return int(float(Path("/proc/uptime").read_text().split()[0]))
+    except Exception:
+        return 0
+
+
+def _cpu_load_percent() -> float:
+    try:
+        cpus = max(1, os.cpu_count() or 1)
+        load1 = os.getloadavg()[0]
+        return max(0.0, min(100.0, (load1 / cpus) * 100.0))
+    except Exception:
+        return 0.0
+
+
 def local_snapshot() -> dict:
-    vm = psutil.virtual_memory()
+    total, used = _read_meminfo()
     disk = shutil.disk_usage(str(Path.home()))
     return {
         "hostname": socket.gethostname(),
         "model": platform.machine(),
         "kernel": platform.release(),
         "python": platform.python_version(),
-        "uptime_s": int(datetime.now().timestamp() - psutil.boot_time()),
-        "cpu": psutil.cpu_percent(interval=0.15),
-        "ram_used_gb": round((vm.total - vm.available) / 1024**3, 2),
-        "ram_total_gb": round(vm.total / 1024**3, 2),
+        "uptime_s": _read_uptime(),
+        "cpu": _cpu_load_percent(),
+        "ram_used_gb": round(used / 1024**3, 2) if total else 0.0,
+        "ram_total_gb": round(total / 1024**3, 2) if total else 0.0,
         "disk_used_gb": round((disk.total - disk.free) / 1024**3, 1),
         "disk_total_gb": round(disk.total / 1024**3, 1),
     }
@@ -183,15 +214,15 @@ class ArkOmega(App):
         self.query_one("#nav", Static).update(nav)
 
         if self.domain_name == "SYSTEM":
-            body = f"""[b cyan]SYSTEM[/b cyan]\n\nVESSEL       ODIN\nHOST         {snap['hostname']}\nARCH         {snap['model']}\nKERNEL       {snap['kernel']}\nPYTHON       {snap['python']}\nUPTIME       {fmt_uptime(snap['uptime_s'])}\n\nCPU          {snap['cpu']:.0f}%\nRAM          {snap['ram_used_gb']} / {snap['ram_total_gb']} GB\nSTORAGE      {snap['disk_used_gb']} / {snap['disk_total_gb']} GB\n\n[b ok]LOCAL TELEMETRY VERIFIED[/b ok]"""
+            body = f"""[b cyan]SYSTEM[/b cyan]\n\nVESSEL       ODIN\nHOST         {snap['hostname']}\nARCH         {snap['model']}\nKERNEL       {snap['kernel']}\nPYTHON       {snap['python']}\nUPTIME       {fmt_uptime(snap['uptime_s'])}\n\nCPU LOAD     {snap['cpu']:.0f}%\nRAM          {snap['ram_used_gb']} / {snap['ram_total_gb']} GB\nSTORAGE      {snap['disk_used_gb']} / {snap['disk_total_gb']} GB\n\n[b ok]LOCAL TELEMETRY VERIFIED // PROCFS[/b ok]"""
         elif self.domain_name == "FABRIC":
             body = "[b cyan]HYPERNET FABRIC[/b cyan]\n\n" + "\n".join(f"{n:<10} {s}" for n, s in peers.items()) + f"\n\nROUTE MODE   {self.peer}\n\nRemote state is rendered only from local authenticated state files. Missing evidence = UNBOUND."
         elif self.domain_name == "RESOURCES":
-            body = f"[b cyan]RESOURCE PLANE[/b cyan]\n\nLOCAL CPU    {snap['cpu']:.0f}%\nLOCAL RAM    {snap['ram_used_gb']} / {snap['ram_total_gb']} GB\nLOCAL DISK   {snap['disk_used_gb']} / {snap['disk_total_gb']} GB\n\nREMOTE POOL  UNBOUND\nGPU POOL     UNBOUND\nMODEL POOL   UNBOUND"
+            body = f"[b cyan]RESOURCE PLANE[/b cyan]\n\nLOCAL CPU    {snap['cpu']:.0f}% load\nLOCAL RAM    {snap['ram_used_gb']} / {snap['ram_total_gb']} GB\nLOCAL DISK   {snap['disk_used_gb']} / {snap['disk_total_gb']} GB\n\nREMOTE POOL  UNBOUND\nGPU POOL     UNBOUND\nMODEL POOL   UNBOUND"
         elif self.domain_name == "MISSIONS":
             body = "[b cyan]MISSION CONTROL[/b cyan]\n\nCANARY       ARK-OMEGA-RUNTIME-CANARY-001\nSTATE        RECEIPT-DRIVEN\nMUTATION     LOCKED UNLESS AUTHORIZED\n\nRun [b]ark-canary[/b] from a shell to generate a real correlated receipt."
         elif self.domain_name == "COGNITION":
-            body = "[b cyan]COGNITION[/b cyan]\n\nATLAS MIND   BOUND BY ESTATE CONTRACT\nGARI         BOUND BY ESTATE CONTRACT\nTHOTH        RECEIPT-BOUND\nCASEGRAPH    CONTRACTED\n\nNo private chain-of-thought is exposed. Only operational events and receipts are displayed."
+            body = "[b cyan]COGNITION[/b cyan]\n\nATLAS MIND   BOUND BY ESTATE CONTRACT\nGARI         BOUND BY ESTATE CONTRACT\nTHOTH        RECEIPT-BOUND\nCASEGRAPH    CONTRACTED\n\nOnly operational events and receipts are displayed."
         elif self.domain_name == "PROOF":
             body = f"[b cyan]PROOFGRID / THOTH[/b cyan]\n\nLATEST LOCAL RECEIPT\n{latest_receipt()}\n\nSEALED state requires correlated JANUS authority, route evidence, execution, SECA, DEVOS, ProofGrid, and Thoth acknowledgement."
         else:
