@@ -1,0 +1,65 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+
+HOST="${JANUS_SSH_HOST:-janus}"
+REMOTE_ARK='${JANUS_ARK_ROOT:-$HOME/Ark-OS}'
+
+usage() {
+  cat <<'EOF'
+janusctl <command>
+
+Commands:
+  shell                 Open an interactive JANUS SSH session.
+  status                Refresh and display JANUS local health.
+  fabric                Probe core Ghost Atlas cloud fabric.
+  fabric-full           Probe the extended Ghost Atlas cloud fabric.
+  nodes                 Show JANUS dynamic node registry.
+  packets               Show packet queue counts.
+  send <file>           Copy a file into JANUS Hypernet inbox.
+  logs                  Tail JANUS resident log.
+  receipt               Emit a local JANUS proof receipt.
+  announce <message>    Raise an Android notification on JANUS when Termux:API exists.
+EOF
+}
+
+case "${1:-}" in
+  shell)
+    exec ssh "$HOST"
+    ;;
+  status)
+    ssh "$HOST" "cd \"$REMOTE_ARK\" && bash scripts/resident-edge/health-snapshot.sh"
+    ;;
+  fabric)
+    ssh "$HOST" "cd \"$REMOTE_ARK\" && bash scripts/resident-edge/fabric-health.sh --core"
+    ;;
+  fabric-full)
+    ssh "$HOST" "cd \"$REMOTE_ARK\" && bash scripts/resident-edge/fabric-health.sh --full"
+    ;;
+  nodes)
+    ssh "$HOST" 'cat "$HOME/hypernet/state/nodes.json"'
+    ;;
+  packets)
+    ssh "$HOST" 'for q in pending claimed running complete failed; do n=$(find "$HOME/hypernet/packets/$q" -maxdepth 1 -type f 2>/dev/null | wc -l); printf "%s=%s\n" "$q" "$n"; done'
+    ;;
+  send)
+    [ -n "${2:-}" ] || { echo "send requires a file" >&2; exit 2; }
+    [ -f "$2" ] || { echo "file not found: $2" >&2; exit 2; }
+    scp "$2" "$HOST:~/hypernet/inbox/"
+    ;;
+  logs)
+    ssh "$HOST" 'tail -n 100 -f "$HOME/hypernet/logs/resident.log"'
+    ;;
+  receipt)
+    ssh "$HOST" "cd \"$REMOTE_ARK\" && bash scripts/resident-edge/emit-proof-receipt.sh"
+    ;;
+  announce)
+    shift
+    [ "$#" -gt 0 ] || { echo "announce requires a message" >&2; exit 2; }
+    payload="$(printf '%s' "$*" | base64 | tr -d '\n')"
+    ssh "$HOST" "if command -v termux-notification >/dev/null 2>&1; then msg=\$(printf '%s' '$payload' | base64 -d); termux-notification --title 'Ghost Atlas // JANUS' --content \"\$msg\"; else echo TERMUX_API=UNAVAILABLE; fi"
+    ;;
+  *)
+    usage
+    exit 2
+    ;;
+esac

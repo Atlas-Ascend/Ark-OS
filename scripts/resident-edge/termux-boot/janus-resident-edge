@@ -1,0 +1,15 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+
+# Install this file into ~/.termux/boot/ after Termux:Boot is installed.
+# Deliberately does not acquire a permanent wake lock by default.
+
+REPO_ROOT="${JANUS_ARK_REPO:-$HOME/Ark-OS}"
+START="$REPO_ROOT/scripts/resident-edge/start-janus.sh"
+
+if [ -x "$START" ] || [ -f "$START" ]; then
+  bash "$START"
+else
+  mkdir -p "$HOME/hypernet/logs"
+  date -u +'%Y-%m-%dT%H:%M:%SZ JANUS_BOOT=FAILED reason=start-script-not-found' >> "$HOME/hypernet/logs/resident.log"
+fi

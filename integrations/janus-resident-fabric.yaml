@@ -1,0 +1,145 @@
+schema: ghost-atlas.fabric.binding/v1
+binding_id: janus-resident-fabric-v1
+node_id: JANUS
+profile: janus-resident-edge-v1
+lifecycle: active-candidate
+proof_state: repository-wired-physical-unverified
+
+command_path:
+  operator: ODIN
+  authorization:
+    organ: JANUS_PRIME
+    repository: Atlas-Ascend/Janus-Prime
+    live_surface: render:janus-prime-runtime-authorization
+  cognition:
+    organ: ATLAS_MIND
+    repository: Atlas-Ascend/Atlas-Mind-LLM
+    live_surface: vercel:atlas-mind-live-surface
+  work_substrate:
+    organ: PACKET_OS
+    repository: Atlas-Ascend/Packet-OS
+  routing:
+    organ: CROWNGRID
+    repository: Atlas-Ascend/Crowngrid
+  dispatch:
+    organ: WORKFORCE_SPINE
+    repository: Atlas-Ascend/workforce-spine
+  memory:
+    organ: THOTH
+    repository: Atlas-Ascend/thoth-archive-engine
+  verification:
+    - organ: SECA
+      repository: Atlas-Ascend/SECA
+    - organ: DEVOS
+      repository: Atlas-Ascend/DEVOS
+  security:
+    organ: MEDUSA
+    repository: Atlas-Ascend/Medusa-Sovereign-Security
+  failure_repair:
+    organ: PROMETHEUS
+    repository: Atlas-Ascend/PROMETHEUS-V-1.1.1
+  proof:
+    organ: PROOFGRID
+    repository: unresolved-dedicated-repo
+    durable_targets:
+      - corporate_os.proofs
+      - estate_registry.office_release_receipts
+
+resident_cloud_capabilities:
+  render:
+    discovery: live-account-inspection
+    services:
+      - name: janus-prime-runtime-authorization
+        role: executive-authorization
+      - name: vishvarupa-organism
+        role: organism-control-surface
+      - name: vishvarupa-cybernetic-brain-gate
+        role: cybernetic-brain-gate
+      - name: ghost-atlas-machine-wake
+        role: resident-control-plane
+      - name: ghost-atlas-machine-wake-oidc-ingress
+        role: authenticated-resident-ingress
+      - name: ghost-atlas-runtime-gateway
+        role: execution-fabric-gateway
+      - name: ghost-atlas-runtime-worker-core
+        role: resident-worker-core
+      - name: ghost-atlas-runtime-worker-custodian
+        role: resident-worker-custodian
+      - name: ghost-atlas-runtime-worker-factory
+        role: resident-worker-factory
+      - name: ghost-atlas-runtime-worker-qualification
+        role: resident-worker-qualification
+      - name: maat-universal-casegraph
+        role: universal-casegraph
+      - name: argus-fieldvision-api
+        role: field-observation-api
+      - name: argus-fieldvision-web
+        role: field-observation-surface
+      - name: hermes-public-access-relay
+        role: public-access-relay
+      - name: athena-ai-infrastructure-command-plane
+        role: infrastructure-command-plane
+      - name: heimdall-machine-governor
+        role: machine-governor
+      - name: hestia-hearth-agentic-control-plane
+        role: hearth-control-plane
+      - name: artemis-local-sovereign-ai
+        role: local-sovereign-ai
+      - name: vulcan-agentic-engineering-foundry
+        role: engineering-foundry
+  vercel:
+    discovery: live-account-inspection
+    projects:
+      - name: atlas-mind-live-surface
+        role: atlas-mind-ui
+      - name: ghost-atlas-machine-wake-observatory
+        role: machine-wake-observability
+      - name: ghost-atlas-live-build-showcase
+        role: proof-showcase
+      - name: ghost-atlas-enterprise-bootstrap
+        role: enterprise-bootstrap-surface
+      - name: ghost-atlas-cloud-continuity
+        role: cloud-continuity-surface
+  neon:
+    project: ghost-atlas-estate-registry
+    branch: main
+    role: durable-estate-data-plane
+    read_targets:
+      - estate_registry.runtime_presence
+      - corporate_os.capabilities
+      - corporate_os.services
+      - corporate_os.runtime_bindings
+      - corporate_os.health_snapshots
+      - corporate_os.packets
+      - corporate_os.events
+      - corporate_os.proofs
+      - corporate_os.workers
+      - corporate_os.workforce_dispatches
+    write_policy: no-physical-active-row-before-live-janus-proof
+
+extended_estate_organs:
+  - GARI
+  - METAFORGE
+  - SERVERFORGE
+  - ROADBRIDGE
+  - MAAT
+  - ARGUS
+  - HERMES
+  - ATHENA
+  - HEIMDALL
+  - HESTIA
+  - ARTEMIS
+  - VULCAN
+  - VISHVARUPA
+
+runtime_policy:
+  adapter_not_owner: true
+  dynamic_discovery: true
+  degrade_gracefully: true
+  queue_when_cloud_unavailable: true
+  route_only_to_verified_healthy_capabilities: true
+  no_secrets_in_git: true
+  no_public_unbounded-shell: true
+  physical_state_requires_device_receipt: true
+  t5810_a: offline-reserve
+  t5810_b: offline-reserve
