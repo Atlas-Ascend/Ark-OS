@@ -17,11 +17,9 @@ mkdir -p \
   "$ROOT/state" \
   "$ROOT/spool/outbound"
 
-for pkg in openssh git tmux rsync python; do
-  if ! command -v "$pkg" >/dev/null 2>&1; then
-    pkg install -y "$pkg"
-  fi
-done
+# Resident edge baseline. Termux:API itself remains optional because the
+# Android companion app must also be installed for those commands to work.
+pkg install -y openssh git tmux rsync python curl jq
 
 cat > "$ROOT/state/nodes.json" <<'JSON'
 {
