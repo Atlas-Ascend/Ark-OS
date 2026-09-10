@@ -25,13 +25,18 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.ASSIST" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <service
             android:name=".assistant.AtlasVoiceInteractionService"
             android:exported="true"
             android:label="Atlas"
-            android:permission="android.permission.BIND_VOICE_INTERACTION">
+            android:permission="android.permission.BIND_VOICE_INTERACTION"
+            android:process=":voice_interactor">
             <intent-filter>
                 <action android:name="android.service.voice.VoiceInteractionService" />
             </intent-filter>
@@ -42,8 +47,19 @@
 
         <service
             android:name=".assistant.AtlasVoiceInteractionSessionService"
-            android:exported="false"
+            android:exported="true"
+            android:permission="android.permission.BIND_VOICE_INTERACTION"
             android:process=":voice_session" />
+
+        <service
+            android:name=".assistant.AtlasRecognitionService"
+            android:exported="true"
+            android:permission="android.permission.BIND_SPEECH_RECOGNITION"
+            android:process=":recognition">
+            <intent-filter>
+                <action android:name="android.speech.RecognitionService" />
+            </intent-filter>
+        </service>
 
     </application>
 </manifest>
