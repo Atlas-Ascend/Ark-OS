@@ -16,7 +16,8 @@ probe() {
   local state="UNKNOWN"
 
   if [ -n "$url" ]; then
-    code="$(curl -L -sS -o /dev/null --connect-timeout 4 --max-time 8 -w '%{http_code}' "$url" 2>/dev/null || printf '000')"
+    code="$(curl -L -sS -o /dev/null --connect-timeout 4 --max-time 8 -w '%{http_code}' "$url" 2>/dev/null || true)"
+    code="${code:-000}"
     case "$code" in
       2??|3??) state="UP" ;;
       000) state="DOWN" ;;
