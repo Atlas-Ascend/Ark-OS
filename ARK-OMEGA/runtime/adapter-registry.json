@@ -1,0 +1,13 @@
+{
+  "version":"1.1.0",
+  "adapters":[
+    {"id":"janus","repo":"Atlas-Ascend/Ark-OS","role":"authorization-policy","state":"contracted"},
+    {"id":"hypernet","repo":"Atlas-Ascend/Hypernet-GMII-Unified-Operating-Model","role":"capability-routing","state":"contracted"},
+    {"id":"packet-os","repo":"Atlas-Ascend/Packet-OS","role":"work-envelope","state":"contracted"},
+    {"id":"workforce-spine","repo":"Atlas-Ascend/workforce-spine","role":"dispatch-execution","state":"contracted"},
+    {"id":"seca","repo":"Atlas-Ascend/SECA","role":"verification","state":"contracted"},
+    {"id":"devos","repo":"Atlas-Ascend/DEVOS","role":"delivery-verification","state":"contracted"},
+    {"id":"proofgrid","repo":"Atlas-Ascend/thoth-archive-engine","role":"proof-receipt-boundary","state":"discovery-required"},
+    {"id":"thoth","repo":"Atlas-Ascend/thoth-archive-engine","role":"memory-commit","state":"contracted"}
+  ]
+}
