@@ -9,10 +9,10 @@ BOOTDIR="$HOME/.termux/boot"
 STATE="$HOME/.local/state/ghost-atlas"
 RUNTIME="$HOME/.local/share/ark-omega"
 VENV="$RUNTIME/venv"
-MARK_BEGIN="# >>> ARK OMEGA AUTOATTACH >>>"
-MARK_END="# <<< ARK OMEGA AUTOATTACH <<<"
+MARK_BEGIN="# >>> ARK OMEGA AUTOBOOT >>>"
+MARK_END="# <<< ARK OMEGA AUTOBOOT <<<"
 
-echo "=== GHOST ATLAS // ODIN ARK Ω PERSISTENT INSTALL ==="
+echo "=== GHOST ATLAS // ODIN ARK Ω FAIL-SAFE INSTALL v1.1.2 ==="
 pkg update -y
 pkg install -y git openssh curl jq rsync python tmux
 
@@ -26,12 +26,11 @@ else
   git -C "$REPO" pull --ff-only origin "$BRANCH"
 fi
 
-# Termux owns its system Python/pip. Never upgrade or replace pip globally.
 if [ ! -x "$VENV/bin/python" ]; then
   python -m venv "$VENV"
 fi
 "$VENV/bin/python" -m pip install --disable-pip-version-check -r "$REPO/ARK-OMEGA/termux/requirements.txt"
-chmod +x "$REPO/ARK-OMEGA/termux/ark-service.sh"
+chmod +x "$REPO/ARK-OMEGA/termux/ark-service.sh" "$REPO/ARK-OMEGA/termux/ark-ui.sh"
 
 cat > "$BIN/ark-service" <<EOF
 #!/data/data/com.termux/files/usr/bin/bash
@@ -40,9 +39,14 @@ exec "$REPO/ARK-OMEGA/termux/ark-service.sh" "\$@"
 EOF
 cat > "$BIN/ark" <<'EOF'
 #!/data/data/com.termux/files/usr/bin/bash
-set -e
-ark-service start >/dev/null || true
-exec ark-service attach
+ark-service start >/dev/null 2>&1 || true
+ark-service ui
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo "ARK_OMEGA_UI=FAILED RC=$rc"
+  echo "SAFE_SHELL=ACTIVE"
+fi
+return "$rc" 2>/dev/null || exit "$rc"
 EOF
 cat > "$BIN/ark-restart" <<'EOF'
 #!/data/data/com.termux/files/usr/bin/bash
@@ -52,13 +56,30 @@ cat > "$BIN/ark-status" <<'EOF'
 #!/data/data/com.termux/files/usr/bin/bash
 exec ark-service status
 EOF
-chmod +x "$BIN/ark-service" "$BIN/ark" "$BIN/ark-restart" "$BIN/ark-status"
+cat > "$BIN/ark-diagnose" <<'EOF'
+#!/data/data/com.termux/files/usr/bin/bash
+exec ark-service diagnose
+EOF
+chmod +x "$BIN/ark-service" "$BIN/ark" "$BIN/ark-restart" "$BIN/ark-status" "$BIN/ark-diagnose"
 
 cat > "$BOOTDIR/10-ark-omega.sh" <<'EOF'
 #!/data/data/com.termux/files/usr/bin/bash
 export PATH="$HOME/.local/bin:$PREFIX/bin:$PATH"
-sleep 8
-ark-service start >> "$HOME/.local/state/ghost-atlas/logs/boot.log" 2>&1
+LOG="$HOME/.local/state/ghost-atlas/logs/boot.log"
+mkdir -p "$(dirname "$LOG")"
+echo "BOOT_ATTEMPT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$LOG"
+for n in 1 2 3 4 5 6 7 8 9 10 11 12; do
+  if command -v ark-service >/dev/null 2>&1; then
+    if ark-service start >> "$LOG" 2>&1; then
+      echo "BOOT_RESULT=PASS ATTEMPT=$n" >> "$LOG"
+      exit 0
+    fi
+  fi
+  echo "BOOT_RETRY=$n" >> "$LOG"
+  sleep 5
+done
+echo "BOOT_RESULT=FAIL" >> "$LOG"
+exit 1
 EOF
 chmod +x "$BOOTDIR/10-ark-omega.sh"
 
@@ -69,18 +90,24 @@ from pathlib import Path
 import sys
 p=Path(sys.argv[1]); begin=sys.argv[2]; end=sys.argv[3]
 s=p.read_text() if p.exists() else ""
-if begin in s and end in s:
-    a=s.index(begin); b=s.index(end,a)+len(end)
-    s=s[:a].rstrip()+"\n"+s[b:].lstrip("\n")
-block='''# >>> ARK OMEGA AUTOATTACH >>>
+# Remove both legacy autoattach and current autoboot blocks.
+for a,b in [
+    ("# >>> ARK OMEGA AUTOATTACH >>>", "# <<< ARK OMEGA AUTOATTACH <<<"),
+    (begin,end),
+]:
+    if a in s and b in s:
+        i=s.index(a); j=s.index(b,i)+len(b)
+        s=s[:i].rstrip()+"\n"+s[j:].lstrip("\n")
+block='''# >>> ARK OMEGA AUTOBOOT >>>
 export PATH="$HOME/.local/bin:$PATH"
-if [[ $- == *i* ]] && [ -z "${TMUX:-}" ] && [ -z "${ARK_NO_AUTOATTACH:-}" ] && command -v ark-service >/dev/null 2>&1; then
-  ark-service start >/dev/null 2>&1 || true
-  if tmux has-session -t ark-omega 2>/dev/null; then
-    exec tmux attach-session -t ark-omega
-  fi
+if [[ $- == *i* ]] && [ -z "${TMUX:-}" ] && [ -z "${ARK_NO_AUTOBOOT:-}" ] && [ -z "${ARK_AUTOBOOT_ATTEMPTED:-}" ] && command -v ark >/dev/null 2>&1; then
+  export ARK_AUTOBOOT_ATTEMPTED=1
+  ark || {
+    printf '\nARK Ω SAFE SHELL // cockpit did not start.\n'
+    printf 'Run: ark-diagnose\n'
+  }
 fi
-# <<< ARK OMEGA AUTOATTACH <<<'''
+# <<< ARK OMEGA AUTOBOOT <<<'''
 p.write_text(s.rstrip()+"\n\n"+block+"\n")
 PY
 
@@ -88,9 +115,11 @@ ark-service restart
 
 echo
 ark-service status || true
-echo "PERSISTENT_INSTALL=PASS"
+echo "FAILSAFE_INSTALL=PASS"
 echo "PYTHON_RUNTIME=$VENV/bin/python"
 echo "BOOT_SCRIPT=$BOOTDIR/10-ark-omega.sh"
 echo "COMMAND=ark"
-echo "OPT_OUT_ONCE=ARK_NO_AUTOATTACH=1 bash"
-echo "ANDROID_REQUIREMENT=Install/Open Termux:Boot once so Android executes ~/.termux/boot after device reboot."
+echo "DIAGNOSTICS=ark-diagnose"
+echo "SAFE_SHELL_OPT_OUT=ARK_NO_AUTOBOOT=1 bash"
+echo "BOOT_POLICY=HEADLESS_SUPERVISOR_ONLY"
+echo "UI_POLICY=INTERACTIVE_TTY_ONLY_WITH_SAFE_SHELL_FALLBACK"
