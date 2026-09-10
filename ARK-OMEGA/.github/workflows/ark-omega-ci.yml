@@ -1,0 +1,24 @@
+name: ARK OMEGA CI
+on:
+  pull_request:
+    paths: ['ARK-OMEGA/**']
+  push:
+    branches: ['feat/ark-omega-cinematic-command-to-proof']
+    paths: ['ARK-OMEGA/**']
+jobs:
+  contract-gate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ARK-OMEGA/REPO-SEEDS/ark-omega-software
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ARK-OMEGA/REPO-SEEDS/ark-omega-software/package.json
+      - run: npm install
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
