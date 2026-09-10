@@ -145,6 +145,16 @@ public final class MainActivity extends Activity implements TextToSpeech.OnInitL
 
         setContentView(scroll);
         loadTools();
+        root.postDelayed(this::requestAssistantRoleIfNeeded, 900);
+    }
+
+    private void requestAssistantRoleIfNeeded() {
+        RoleManager roleManager = getSystemService(RoleManager.class);
+        if (roleManager != null
+                && roleManager.isRoleAvailable(RoleManager.ROLE_ASSISTANT)
+                && !roleManager.isRoleHeld(RoleManager.ROLE_ASSISTANT)) {
+            startActivityForResult(roleManager.createRequestRoleIntent(RoleManager.ROLE_ASSISTANT), 2001);
+        }
     }
 
     private void loadTools() {
@@ -198,6 +208,10 @@ public final class MainActivity extends Activity implements TextToSpeech.OnInitL
     private void requestAssistantRole() {
         RoleManager roleManager = getSystemService(RoleManager.class);
         if (roleManager != null && roleManager.isRoleAvailable(RoleManager.ROLE_ASSISTANT)) {
+            if (roleManager.isRoleHeld(RoleManager.ROLE_ASSISTANT)) {
+                transcript.setText("Atlas already holds the Android Assistant role.");
+                return;
+            }
             startActivityForResult(roleManager.createRequestRoleIntent(RoleManager.ROLE_ASSISTANT), 2001);
         } else {
             startActivity(new Intent(Settings.ACTION_VOICE_INPUT_SETTINGS));
