@@ -245,7 +245,8 @@ public final class MainActivity extends Activity implements TextToSpeech.OnInitL
         new Thread(() -> {
             try {
                 JSONObject result = AtlasRuntimeClient.getResidentBrief();
-                runOnUiThread(() -> transcript.setText(result.toString(2)));
+                String rendered = result.toString(2);
+                runOnUiThread(() -> transcript.setText(rendered));
             } catch (Exception error) {
                 runOnUiThread(() -> transcript.setText("SAMI degraded: " + error.getMessage()));
             }
