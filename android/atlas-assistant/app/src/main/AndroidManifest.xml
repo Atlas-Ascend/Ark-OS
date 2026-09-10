@@ -35,7 +35,8 @@
             android:name=".assistant.AtlasVoiceInteractionService"
             android:exported="true"
             android:label="Atlas"
-            android:permission="android.permission.BIND_VOICE_INTERACTION">
+            android:permission="android.permission.BIND_VOICE_INTERACTION"
+            android:process=":voice_interactor">
             <intent-filter>
                 <action android:name="android.service.voice.VoiceInteractionService" />
             </intent-filter>
@@ -49,6 +50,16 @@
             android:exported="true"
             android:permission="android.permission.BIND_VOICE_INTERACTION"
             android:process=":voice_session" />
+
+        <service
+            android:name=".assistant.AtlasRecognitionService"
+            android:exported="true"
+            android:permission="android.permission.BIND_SPEECH_RECOGNITION"
+            android:process=":recognition">
+            <intent-filter>
+                <action android:name="android.speech.RecognitionService" />
+            </intent-filter>
+        </service>
 
     </application>
 </manifest>
