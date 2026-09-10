@@ -56,7 +56,7 @@ case "${1:-}" in
     shift
     [ "$#" -gt 0 ] || { echo "announce requires a message" >&2; exit 2; }
     payload="$(printf '%s' "$*" | base64 | tr -d '\n')"
-    ssh "$HOST" "if command -v termux-notification >/dev/null 2>&1; then printf '%s' '$payload' | base64 -d | termux-notification --title 'Ghost Atlas // JANUS' --content -; else echo TERMUX_API=UNAVAILABLE; fi"
+    ssh "$HOST" "if command -v termux-notification >/dev/null 2>&1; then msg=\$(printf '%s' '$payload' | base64 -d); termux-notification --title 'Ghost Atlas // JANUS' --content \"\$msg\"; else echo TERMUX_API=UNAVAILABLE; fi"
     ;;
   *)
     usage
