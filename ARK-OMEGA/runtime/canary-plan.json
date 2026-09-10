@@ -1,0 +1,7 @@
+{
+  "id":"ARK-OMEGA-RUNTIME-CANARY-001",
+  "version":"1.1.0",
+  "route":["ODIN","JANUS","HYPERNET","EDEN_OR_CAPABILITY_NODE","PACKET_OS","WORKFORCE_SPINE","SECA","DEVOS","PROOFGRID","THOTH","ODIN"],
+  "success_requires":["signed_command","authorized_route","capability_resolution","execution_receipt","seca_pass","devos_pass","proof_receipt","thoth_commit","odin_display_ack"],
+  "promotion":"DENY_UNLESS_ALL_PASS"
+}

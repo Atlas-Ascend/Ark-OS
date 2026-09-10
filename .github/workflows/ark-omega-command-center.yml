@@ -1,0 +1,35 @@
+name: ARK OMEGA Command Center
+
+on:
+  pull_request:
+    paths:
+      - 'ARK-OMEGA/**'
+      - '.github/workflows/ark-omega-command-center.yml'
+  push:
+    branches:
+      - feat/ark-omega-cinematic-command-to-proof
+    paths:
+      - 'ARK-OMEGA/**'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ARK-OMEGA/REPO-SEEDS/ark-omega-software/apps/command-center
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ARK-OMEGA/REPO-SEEDS/ark-omega-software/apps/command-center/package.json
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npx tsc --noEmit --jsx react-jsx --lib dom,dom.iterable,esnext --module esnext --moduleResolution bundler --target es2022 app/page.tsx app/layout.tsx
+      - name: Production build
+        run: npm run build
