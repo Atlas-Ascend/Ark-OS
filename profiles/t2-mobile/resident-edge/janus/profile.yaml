@@ -1,0 +1,55 @@
+schema: ghost-atlas.ark.profile/v1
+profile_id: janus-resident-edge-v1
+device_identity: JANUS
+class: t2-mobile
+mode: resident-edge
+lifecycle: active-candidate
+canonical_role: always-on-hypernet-edge-controller
+mobility_role: stationary
+operator_peer: ODIN
+runtime:
+  shell: termux
+  remote_control:
+    transport: ssh
+    port: 8022
+    key_auth_required: true
+  session_persistence: tmux
+  heavy_compute: false
+  wake_lock_default: false
+capabilities:
+  - hypernet-bastion
+  - packet-ingress
+  - packet-buffering
+  - node-discovery
+  - heartbeat-registry
+  - local-service-relay
+  - file-ingress-egress
+  - android-body-telemetry
+  - event-annunciation
+  - future-wake-on-lan-control
+state_policy:
+  dynamic_membership: true
+  offline_nodes_remain_registered: true
+  route_only_to_healthy_nodes: true
+  physical_claims_require_live_receipts: true
+reserved_nodes:
+  - id: T5810-A
+    state: OFFLINE
+    role: compute-reserve
+  - id: T5810-B
+    state: OFFLINE
+    role: compute-reserve
+active_baseline:
+  - id: JANUS
+    role: resident-edge
+  - id: ODIN
+    role: mobile-operator
+  - id: EDEN
+    role: local-runtime
+  - id: SHAMBALA
+    role: local-node
+security:
+  no_secrets_in_git: true
+  no_unbounded_remote_shell_from_public_network: true
+  bind_private_services_to_private_hypernet: true
+  medusa_gate_required_for_publication: true
