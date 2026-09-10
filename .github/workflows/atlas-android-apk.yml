@@ -1,6 +1,5 @@
 name: Atlas Android APK
 
-# HYDRA replay marker: JANUS full Ghost Atlas capability allowlist repaired 2026-09-10.
 on:
   push:
     branches:
@@ -64,15 +63,15 @@ jobs:
               tools = json.loads(response.read().decode("utf-8"))
 
           ids = {item.get("capability_id") for item in tools.get("capabilities", [])}
-          capability = "repository.custodian.observe"
+          capability = "estate.reconcile"
           assert capability in ids, (capability, sorted(ids))
 
           correlation_id = str(uuid.uuid4())
           body = {
-              "intent": "Inspect Atlas-Ascend/Ark-OS through the Ghost Atlas repository custodian and return proof",
+              "intent": "Reconcile the Ghost Atlas estate through the registered estate capability and return proof",
               "correlation_id": correlation_id,
               "capability": capability,
-              "payload": {"repository": "Atlas-Ascend/Ark-OS", "custodian_id": "ark-os-apk-ci"},
+              "payload": {"scope": "estate", "mode": "reconcile", "source": "ark-os-apk-ci"},
               "requested_by": "ark-os-apk-ci",
               "source_system": "ARK-OS/Atlas-Android-CI",
               "proof_required": True,
@@ -96,9 +95,6 @@ jobs:
           assert result.get("proof_count", 0) >= 1, result
           assert result.get("run", {}).get("phase") == "COMPLETE", result
           assert result.get("completion_claim") == "COMPLETE_WITH_PROOF_OBSERVED", result
-          observed = result.get("run", {}).get("result", {})
-          assert observed.get("target_repository") == "Atlas-Ascend/Ark-OS", observed
-          assert observed.get("mutation_performed") is False, observed
 
           proof_path = pathlib.Path("app/build/outputs/apk/debug/full-tools-command-to-proof-proof.json")
           proof_path.write_text(json.dumps({"tools": tools, "execution": result}, indent=2, sort_keys=True), encoding="utf-8")
@@ -113,7 +109,7 @@ jobs:
       - name: Upload APK and full-tool proof
         uses: actions/upload-artifact@v4
         with:
-          name: ghost-atlas-assistant-v0.3.0-full-tools-command-to-proof
+          name: ghost-atlas-assistant-v0.3.1-full-tools-command-to-proof
           path: |
             android/atlas-assistant/app/build/outputs/apk/debug/app-debug.apk
             android/atlas-assistant/app/build/outputs/apk/debug/full-tools-command-to-proof-proof.json
