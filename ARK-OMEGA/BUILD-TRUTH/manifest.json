@@ -1,0 +1,47 @@
+{
+  "build_truth_id": "ARK-OMEGA-BUILD-TRUTH-v1.0.0",
+  "version": "1.0.0",
+  "status": "DRAFT_ACCESSION_BASELINE",
+  "branch": "feat/ark-omega-cinematic-command-to-proof",
+  "governance": {
+    "destructive_deletion_authorized": false,
+    "vishvarupa_interface_retirement_authorized": false,
+    "production_promotion_authorized": false,
+    "promotion_requires_command_to_proof_canary": true
+  },
+  "documents": [
+    "01-CHARTER.md",
+    "02-SYSTEM-CONTEXT.md",
+    "03-REQUIREMENTS.md",
+    "04-ARCHITECTURE.md",
+    "05-UNIVERSAL-NODE-CONTRACT.md",
+    "06-DATA-EVENT-CONTRACTS.md",
+    "07-SECURITY-THREAT-MODEL.md",
+    "08-SDLC.md",
+    "09-CINEMATIC-OBSERVABILITY.md",
+    "10-ODIN-OPERATOR-SURFACE.md",
+    "11-VISHVARUPA-SUCCESSION.md",
+    "12-TEST-VERIFICATION.md",
+    "13-DEPLOYMENT-ROLLBACK.md",
+    "14-REPO-TOPOLOGY.md",
+    "15-COMMAND-TO-PROOF.md",
+    "16-PROOF-PROMOTION.md"
+  ],
+  "required_canary_path": [
+    "ODIN",
+    "JANUS",
+    "HYPERNET",
+    "EDEN_OR_CAPABILITY_NODE",
+    "PACKET_OS",
+    "WORKFORCE_SPINE",
+    "SECA_DEVOS",
+    "PROOFGRID",
+    "THOTH",
+    "ODIN"
+  ],
+  "versioning": {
+    "major": "contract, governance, trust, authority, or system-boundary changes",
+    "minor": "backward-compatible capabilities and adapters",
+    "patch": "non-breaking corrections, hardening, tests, and documentation"
+  }
+}
