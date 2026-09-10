@@ -2,23 +2,32 @@
 set -euo pipefail
 
 REPO="${ARK_REPO:-$HOME/ghost-atlas/Ark-OS}"
-APP="$REPO/ARK-OMEGA/termux/ark_omega.py"
-SESSION="${ARK_TMUX_SESSION:-ark-omega}"
-LOGDIR="$HOME/.local/state/ghost-atlas/logs"
-PYTHON_BIN="${ARK_PYTHON:-$HOME/.local/share/ark-omega/venv/bin/python}"
+SESSION="${ARK_TMUX_SESSION:-ark-omega-supervisor}"
+STATE="$HOME/.local/state/ghost-atlas"
+LOGDIR="$STATE/logs"
+HEARTBEAT="$STATE/ark-omega-supervisor.heartbeat"
+UI="$REPO/ARK-OMEGA/termux/ark-ui.sh"
 mkdir -p "$LOGDIR"
+
+start_supervisor() {
+  if tmux has-session -t "$SESSION" 2>/dev/null; then
+    echo "ARK_OMEGA_SERVICE=ALREADY_RUNNING SESSION=$SESSION"
+    return 0
+  fi
+  command -v termux-wake-lock >/dev/null 2>&1 && termux-wake-lock || true
+  tmux new-session -d -s "$SESSION" "while :; do date -u +%Y-%m-%dT%H:%M:%SZ > '$HEARTBEAT'; sleep 30; done"
+  sleep 1
+  if tmux has-session -t "$SESSION" 2>/dev/null; then
+    echo "ARK_OMEGA_SERVICE=STARTED SESSION=$SESSION"
+  else
+    echo "ARK_OMEGA_SERVICE=FAIL SUPERVISOR_START_FAILED"
+    return 70
+  fi
+}
 
 case "${1:-start}" in
   start)
-    if tmux has-session -t "$SESSION" 2>/dev/null; then
-      echo "ARK_OMEGA_SERVICE=ALREADY_RUNNING"
-      exit 0
-    fi
-    [ -f "$APP" ] || { echo "ARK_OMEGA_SERVICE=FAIL APP_NOT_FOUND=$APP"; exit 66; }
-    [ -x "$PYTHON_BIN" ] || { echo "ARK_OMEGA_SERVICE=FAIL PYTHON_RUNTIME_NOT_FOUND=$PYTHON_BIN"; exit 69; }
-    command -v termux-wake-lock >/dev/null 2>&1 && termux-wake-lock || true
-    tmux new-session -d -s "$SESSION" "cd '$REPO' && exec '$PYTHON_BIN' '$APP' >>'$LOGDIR/ark-omega.tui.log' 2>&1"
-    echo "ARK_OMEGA_SERVICE=STARTED SESSION=$SESSION PYTHON=$PYTHON_BIN"
+    start_supervisor
     ;;
   stop)
     tmux kill-session -t "$SESSION" 2>/dev/null || true
@@ -31,17 +40,32 @@ case "${1:-start}" in
     ;;
   status)
     if tmux has-session -t "$SESSION" 2>/dev/null; then
-      echo "ARK_OMEGA_SERVICE=RUNNING SESSION=$SESSION PYTHON=$PYTHON_BIN"
+      hb="$(cat "$HEARTBEAT" 2>/dev/null || echo UNKNOWN)"
+      echo "ARK_OMEGA_SERVICE=RUNNING SESSION=$SESSION HEARTBEAT=$hb"
     else
       echo "ARK_OMEGA_SERVICE=STOPPED"
       exit 3
     fi
     ;;
-  attach)
-    tmux attach-session -t "$SESSION"
+  ui|attach)
+    start_supervisor >/dev/null || true
+    exec "$UI"
+    ;;
+  diagnose)
+    echo "=== ARK Ω DIAGNOSTICS ==="
+    "$0" status || true
+    echo "REPO=$REPO"
+    echo "UI=$UI"
+    [ -x "$UI" ] && echo "UI_SCRIPT=PASS" || echo "UI_SCRIPT=FAIL"
+    [ -x "$HOME/.local/share/ark-omega/venv/bin/python" ] && echo "PYTHON_RUNTIME=PASS" || echo "PYTHON_RUNTIME=FAIL"
+    "$HOME/.local/share/ark-omega/venv/bin/python" -c 'import textual; print("TEXTUAL=PASS")' 2>/dev/null || echo "TEXTUAL=FAIL"
+    echo "--- BOOT LOG ---"
+    tail -n 20 "$LOGDIR/boot.log" 2>/dev/null || echo "NO_BOOT_LOG"
+    echo "--- UI LOG ---"
+    tail -n 20 "$LOGDIR/ark-ui.log" 2>/dev/null || echo "NO_UI_LOG"
     ;;
   *)
-    echo "usage: ark-service {start|stop|restart|status|attach}" >&2
+    echo "usage: ark-service {start|stop|restart|status|ui|attach|diagnose}" >&2
     exit 64
     ;;
 esac
