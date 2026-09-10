@@ -30,21 +30,12 @@ public final class AtlasRecognitionService extends RecognitionService {
 
     @Override
     protected void onCancel(Callback callback) {
-        main.post(() -> {
-            if (delegate != null) {
-                delegate.cancel();
-                delegate.destroy();
-                delegate = null;
-            }
-        });
+        main.post(() -> cleanup());
     }
 
     private void startDelegate(Intent recognizerIntent, Callback callback) {
         try {
-            if (delegate != null) {
-                delegate.destroy();
-                delegate = null;
-            }
+            cleanup();
             ComponentName external = findExternalRecognizer();
             if (external == null) {
                 callback.error(SpeechRecognizer.ERROR_CLIENT);
@@ -57,10 +48,10 @@ public final class AtlasRecognitionService extends RecognitionService {
                 @Override public void onRmsChanged(float rmsdB) { callback.rmsChanged(rmsdB); }
                 @Override public void onBufferReceived(byte[] buffer) { callback.bufferReceived(buffer); }
                 @Override public void onEndOfSpeech() { callback.endOfSpeech(); }
-                @Override public void onError(int error) { callback.error(error); }
+                @Override public void onError(int error) { callback.error(error); cleanup(); }
                 @Override public void onResults(Bundle results) { callback.results(results); cleanup(); }
                 @Override public void onPartialResults(Bundle partialResults) { callback.partialResults(partialResults); }
-                @Override public void onEvent(int eventType, Bundle params) { callback.event(eventType, params); }
+                @Override public void onEvent(int eventType, Bundle params) { }
             });
             delegate.startListening(recognizerIntent);
         } catch (Exception error) {
@@ -82,6 +73,7 @@ public final class AtlasRecognitionService extends RecognitionService {
 
     private void cleanup() {
         if (delegate != null) {
+            try { delegate.cancel(); } catch (Exception ignored) {}
             delegate.destroy();
             delegate = null;
         }
