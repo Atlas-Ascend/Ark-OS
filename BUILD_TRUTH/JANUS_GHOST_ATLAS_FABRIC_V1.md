@@ -5,7 +5,7 @@
 **Branch:** `janus-resident-edge-v1`  
 **Device:** JANUS  
 **Role:** always-on resident Hypernet edge controller  
-**State:** repository-wired / physical-runtime-unverified
+**State:** repository-verified / physical-runtime-unverified
 
 ## Decision
 
@@ -174,6 +174,16 @@ bash scripts/resident-edge/odin/install-janusctl.sh
 ```
 
 Then configure ODIN's SSH alias `janus` to JANUS port 8022 and enroll ODIN's public key on JANUS.
+
+## Repository verification evidence
+
+- local Bash syntax validation: PASS for resident bootstrap/control/proof scripts
+- GitHub Actions workflow: `verify-ga-ark`
+- exact-head push run: PASS
+- exact-head pull-request run: PASS
+- PR mergeability: clean/mergeable at verification time
+
+These prove the repository candidate, not physical JANUS execution.
 
 ## Promotion proof gate
 
