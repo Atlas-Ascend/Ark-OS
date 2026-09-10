@@ -1,6 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 set -euo pipefail
 
+ARK_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ROOT="${HOME}/hypernet"
 
 mkdir -p \
@@ -15,7 +16,8 @@ mkdir -p \
   "$ROOT/receipts" \
   "$ROOT/logs" \
   "$ROOT/state" \
-  "$ROOT/spool/outbound"
+  "$ROOT/spool/outbound" \
+  "$HOME/.termux/boot"
 
 # Resident edge baseline. Termux:API itself remains optional because the
 # Android companion app must also be installed for those commands to work.
@@ -32,8 +34,14 @@ cat > "$ROOT/state/nodes.json" <<'JSON'
 }
 JSON
 
+install -m 700 \
+  "$ARK_ROOT/scripts/resident-edge/termux-boot/janus-resident-edge" \
+  "$HOME/.termux/boot/janus-resident-edge"
+
 chmod 700 "$ROOT"
 
 echo "JANUS_RESIDENT_EDGE_BOOTSTRAP=PASS"
 echo "ROOT=$ROOT"
+echo "BOOT_HOOK=$HOME/.termux/boot/janus-resident-edge"
+echo "NOTE=Termux:Boot Android companion app must be installed/opened once for boot execution."
 echo "NEXT: configure ODIN public key in ~/.ssh/authorized_keys, then run scripts/resident-edge/start-janus.sh"
