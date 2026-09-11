@@ -19,7 +19,9 @@ Commands:
   send <file>           Copy a file into JANUS Hypernet inbox.
   logs                  Tail JANUS resident log.
   receipt               Emit a local JANUS proof receipt.
+  identity              Emit an ODIN physical resident identity receipt.
   estate-forensics      Run the governed 81-repo estate census locally on ODIN.
+  workforce-proof       Run Sprint 31 Workforce proof locally with ODIN identity binding.
   announce <message>    Raise an Android notification on JANUS when Termux:API exists.
 EOF
 }
@@ -54,12 +56,22 @@ case "${1:-}" in
   receipt)
     ssh "$HOST" "cd \"$REMOTE_ARK\" && bash scripts/resident-edge/emit-proof-receipt.sh"
     ;;
+  identity)
+    exec bash "$ODIN_ARK_ROOT/scripts/resident-edge/odin/emit-odin-identity-receipt.sh"
+    ;;
   estate-forensics)
     [ -f "$ODIN_ARK_ROOT/scripts/resident-edge/estate-forensics.sh" ] || {
       echo "ODIN estate-forensics wrapper missing: $ODIN_ARK_ROOT/scripts/resident-edge/estate-forensics.sh" >&2
       exit 2
     }
-    exec env GA_EXECUTOR_NODE=ODIN bash "$ODIN_ARK_ROOT/scripts/resident-edge/estate-forensics.sh"
+    exec bash "$ODIN_ARK_ROOT/scripts/resident-edge/estate-forensics.sh"
+    ;;
+  workforce-proof)
+    [ -f "$ODIN_ARK_ROOT/scripts/resident-edge/odin/run-workforce-proof.sh" ] || {
+      echo "ODIN Workforce proof wrapper missing: $ODIN_ARK_ROOT/scripts/resident-edge/odin/run-workforce-proof.sh" >&2
+      exit 2
+    }
+    exec bash "$ODIN_ARK_ROOT/scripts/resident-edge/odin/run-workforce-proof.sh"
     ;;
   announce)
     shift
