@@ -1,0 +1,39 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+
+BASE_URL="${ATLAS_MIND_URL:-https://atlasmind.global}"
+
+usage() {
+  cat <<'EOF'
+atlas [organism|try|operator|status]
+
+Open the canonical Atlas Mind PWA surface from Termux.
+
+  atlas             Open the installable organism hub.
+  atlas organism    Open the installable organism hub.
+  atlas try         Open the bounded public evaluator.
+  atlas operator    Open the governed Estate operator surface.
+  atlas status      Open the public Atlas status surface.
+
+This launcher carries no Atlas/JANUS/operator credential and does not implement a
+second cognition stack. Authentication and state-changing authority remain in the
+existing Atlas Mind / JANUS web-runtime boundary.
+EOF
+}
+
+case "${1:-organism}" in
+  organism|open) path="/organism" ;;
+  try|talk) path="/try" ;;
+  operator|estate) path="/atlas" ;;
+  status) path="/status" ;;
+  help|-h|--help) usage; exit 0 ;;
+  *) usage >&2; exit 2 ;;
+esac
+
+url="${BASE_URL%/}${path}"
+
+if command -v termux-open-url >/dev/null 2>&1; then
+  exec termux-open-url "$url"
+fi
+
+printf '%s\n' "$url"
